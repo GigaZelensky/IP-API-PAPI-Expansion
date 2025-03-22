@@ -3,6 +3,10 @@ package com.gigazelensky.ipapi;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -20,11 +24,12 @@ import java.util.logging.Level;
 /**
  * This expansion provides placeholders for IP data from ip-api.com
  */
-public class IPAPIExpansion extends PlaceholderExpansion {
+public class IPAPIExpansion extends PlaceholderExpansion implements Listener {
 
     private final Map<String, Map<String, String>> cache = new ConcurrentHashMap<>();
     private final Map<String, Long> cacheExpiry = new ConcurrentHashMap<>();
     private static final long CACHE_TIME = 3600000; // 1 hour in milliseconds
+    private static final long JOIN_UPDATE_COOLDOWN = 120000; // 2 minutes in milliseconds
     private final JSONParser parser = new JSONParser();
 
     @Override
@@ -63,6 +68,7 @@ public class IPAPIExpansion extends PlaceholderExpansion {
         
         // Check if we need to fetch data for this IP
         if (!cache.containsKey(ipAddress) || System.currentTimeMillis() > cacheExpiry.getOrDefault(ipAddress, 0L)) {
+            // Fetch data synchronously for the first request
             fetchIPData(ipAddress);
         }
         
@@ -109,7 +115,8 @@ public class IPAPIExpansion extends PlaceholderExpansion {
                     data.put(keyStr, value != null ? value.toString() : "");
                 }
                 
-                // Try to fetch DNS information separately (requires Pro subscription)
+                // Note: DNS information requires Pro subscription and won't work with free tier
+                // Adding this comment for clarification
                 fetchDNSData(ip, data);
                 
                 // Store in cache
@@ -132,6 +139,8 @@ public class IPAPIExpansion extends PlaceholderExpansion {
     
     /**
      * Fetches DNS information for an IP and adds it to the data map
+     * Note: This feature requires a Pro subscription to ip-api.com and won't work with the free tier
+     * The code is included for completeness but will return empty values with the free tier
      * 
      * @param ip The IP address
      * @param data The map to store the DNS data in
