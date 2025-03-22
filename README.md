@@ -5,6 +5,7 @@ A PlaceholderAPI expansion that provides placeholders for IP geolocation data us
 ## Features
 
 - Get detailed IP information about your players
+- Auto-updates data when a player joins (if last update was more than 2 minutes ago)
 - Cache system to stay within API rate limits
 - No additional dependencies required
 - Free to use (uses ip-api.com free tier)
